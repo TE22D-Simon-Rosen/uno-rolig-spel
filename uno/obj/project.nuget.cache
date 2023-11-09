@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "a8S/bHDMNUcU6h9qATaQbvxiAnesoF6FcVuj2UGSh1r40Cy/KzWP36NENvO5Q7iJMiFkfYs3xPLSIS0QbeuRKw==",
+  "success": true,
+  "projectFilePath": "C:\\Users\\simon.rosen2\\Documents\\Programmering med micke b\\uno rolig spel\\uno\\uno.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\simon.rosen2\\.nuget\\packages\\raylib-cs\\5.0.0\\raylib-cs.5.0.0.nupkg.sha512",
+    "C:\\Users\\simon.rosen2\\.nuget\\packages\\system.numerics.vectors\\4.5.0\\system.numerics.vectors.4.5.0.nupkg.sha512"
+  ],
+  "logs": []
+}
