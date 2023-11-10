@@ -32,7 +32,7 @@ void ResetHand(Player player)
     //Give 7 cards at start
     for (int i = 0; i < player.numOfCards; i++)
     {
-        DrawCard(player );
+        DrawCard(player);
     }
 }
 
@@ -56,7 +56,8 @@ void DrawCard(Player player)
 
 void DisplayCards(Player player)
 {
-    Console.WriteLine("Number of cards: " + player.numOfCards + "\n");
+    Console.WriteLine($"Number of cards: {player.numOfCards} \nP2: {listOfPlayers[1].numOfCards}, P3: {listOfPlayers[2].numOfCards}, P4: {listOfPlayers[3].numOfCards}\n");
+    Console.WriteLine("Your cards:\n");
     for (int i = 0; i < player.hand.Count(); i++)
     {
         Console.WriteLine($"card {i + 1} = {colors[player.hand[i].color]} {player.hand[i].number}\n");
@@ -85,11 +86,13 @@ void PlayCard(Player player, Card card)
                 break;
             }
         }
-        
-        if (whosTurn == listOfPlayers.Count()){
+
+        if (whosTurn == listOfPlayers.Count())
+        {
             whosTurn = 1;
         }
-        else{
+        else
+        {
             whosTurn += 1;
         }
     }
@@ -114,25 +117,27 @@ void PlayOrDraw(Player player)
     {
         DrawCard(listOfPlayers[0]);
     }
-    else if(int.TryParse(input, out int result))
+    else if (int.TryParse(input, out int result))
     {
-        if (result < 1 || result > player.numOfCards){
+        if (result < 1 || result > player.numOfCards)
+        {
             Console.WriteLine("Card does not exist, try again with a different number\n");
             PlayOrDraw(listOfPlayers[0]);
         }
-        else{
-            if (player.hand[result - 1].color == playedCards.Last().color || player.hand[result - 1].number == playedCards.Last().number){
+        else
+        {
+            if (player.hand[result - 1].color == playedCards.Last().color || player.hand[result - 1].number == playedCards.Last().number)
+            {
                 PlayCard(listOfPlayers[0], listOfPlayers[0].hand[result - 1]);
             }
-            else{
+            else
+            {
                 Console.WriteLine("Cannot play that card, try again with a different number or draw a card");
                 PlayOrDraw(player);
             }
-            
         }
-        
     }
-    else{PlayOrDraw(player);}
+    else { PlayOrDraw(player); }
 }
 
 while (!gameEnd)
@@ -171,7 +176,8 @@ while (!gameEnd)
             Console.WriteLine();
             cardsShowed = false;
         }
-        else{
+        else
+        {
             Console.WriteLine($"Player {whosTurn}'s Turn! \nLast played card: {colors[playedCards.Last().color]} {playedCards.Last().number}\n");
             Console.ReadLine();
             PlayCard(listOfPlayers[whosTurn - 1], null);
@@ -191,5 +197,6 @@ public class Card
 public class Player
 {
     public int numOfCards = 7;
+    public bool uno = false;
     public List<Card> hand = new List<Card>();
 }
