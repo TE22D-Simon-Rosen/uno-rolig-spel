@@ -25,7 +25,7 @@ int currentScene = 0;
 List<Card> playedCards = new List<Card>();
 
 
-void selectBots()
+void SelectBots()
 {
     Console.WriteLine("Minimum: 1, Maximum: 3\n");
     string input = Console.ReadLine();
@@ -35,13 +35,13 @@ void selectBots()
         if (result < 1 || result > 3)
         {
             Console.WriteLine("Amount not allowed, try again\n");
-            selectBots();
+            SelectBots();
         }
         else
         {
             botCount = result;
 
-            for (int i = 1; i <= botCount + 1; i++)
+            for (int i = 1; i <= botCount; i++)
             {
                 Player player = new Player();
 
@@ -52,9 +52,10 @@ void selectBots()
             }
         }
     }
-    else{
+    else
+    {
         Console.WriteLine("Not a number, try again");
-        selectBots();
+        SelectBots();
     }
 }
 
@@ -84,7 +85,11 @@ void DrawCard(Player player)
         {
             Console.WriteLine($"You drew a {colors[card.color]} {card.number}\n");
             player.numOfCards += 1;
-            whosTurn += 1;
+        }
+        else
+        {
+            Console.WriteLine(player.name + " drew a card\n");
+            player.numOfCards = player.hand.Count();
         }
     }
 }
@@ -92,13 +97,13 @@ void DrawCard(Player player)
 
 void DisplayCards(Player player)
 {
-    if (listOfPlayers[0].numOfCards == 1)
+    if (player.numOfCards == 2)
     {
-        Console.WriteLine($"You have ONE card remaining!! Don't forget to type UNO before you play your card!\n");
+        Console.WriteLine($"\nYou have TWO cards remaining!! Don't forget to type UNO before you play your card!\n");
     }
     else
     {
-        Console.WriteLine($"Number of cards: {player.numOfCards}");
+        Console.WriteLine($"\nNumber of cards: {player.numOfCards}");
     }
 
     Console.WriteLine(""); //Line for the foreach loop to contine writing on
@@ -143,17 +148,37 @@ void PlayCard(Player player, Card card)
         {
             if (botCard.color == playedCards.Last().color || botCard.number == playedCards.Last().number)
             {
-                Console.WriteLine($"{player.name} played a {colors[botCard.color]} {botCard.number}\n");
-                playedCards.Add(botCard);
-                player.hand.Remove(botCard);
-                player.numOfCards = player.hand.Count();
-                break;
+                if (player.numOfCards == 2)
+                {
+                    if (random.Next(1, 10) > 3)
+                    { //70% chance for bot to call UNO
+                        Console.WriteLine($"{player.name} played a {colors[botCard.color]} {botCard.number}\n");
+                        playedCards.Add(botCard);
+                        player.hand.Remove(botCard);
+                        player.numOfCards = player.hand.Count();
+                        break;
+                    }
+                    else
+                    { //If it "forgets" to call UNO
+                        Console.WriteLine($"{player.name} forgot to call UNO!\n");
+                        for (int i = 0; i < 3; i++)
+                        {
+                            DrawCard(player);
+                        }
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"{player.name} played a {colors[botCard.color]} {botCard.number}\n");
+                    playedCards.Add(botCard);
+                    player.hand.Remove(botCard);
+                    player.numOfCards = player.hand.Count();
+                    break;
+                }
             }
             else
             {
                 DrawCard(player);
-                Console.WriteLine(player.name + " drew a card\n");
-                player.numOfCards = player.hand.Count();
                 break;
             }
         }
@@ -169,7 +194,7 @@ void PlayCard(Player player, Card card)
     }
     else
     {
-        Console.WriteLine($"You played a {colors[card.color]} {card.number}");
+        Console.WriteLine($"You played a {colors[card.color]} {card.number}\n");
         playedCards.Add(card);
         player.hand.Remove(card);
         player.numOfCards = player.hand.Count();
@@ -180,13 +205,15 @@ void PlayCard(Player player, Card card)
 
 void PlayOrDraw(Player player)
 {
-    Console.WriteLine("Play a card by typing the corresponding number, draw a card by typing \"Draw\"\n");
+    Console.WriteLine("\nPlay a card by typing the corresponding number, draw a card by typing \"Draw\"\n");
     string input = null;
 
     input = Console.ReadLine().Trim().ToUpper();
     if (input == "DRAW")
     {
         DrawCard(listOfPlayers[0]);
+        whosTurn += 1;
+        player.uno = false;
     }
     else if (int.TryParse(input, out int result))
     {
@@ -197,18 +224,46 @@ void PlayOrDraw(Player player)
         }
         else
         {
+            //Checks if the selected card is the same color or number as the card at the top of the pile
             if (player.hand[result - 1].color == playedCards.Last().color || player.hand[result - 1].number == playedCards.Last().number)
             {
+                if (player.numOfCards == 2 && !player.uno) //Gives the player 3 cards if they forget to call uno when they have to
+                {
+                    Console.WriteLine("You forgot to call UNO! +3 cards");
+                    for (int i = 0; i < 3; i++)
+                    {
+                        DrawCard(player);
+                        Console.ReadLine();
+                    }
+                }
+
                 PlayCard(listOfPlayers[0], listOfPlayers[0].hand[result - 1]);
             }
             else
             {
-                Console.WriteLine("Cannot play that card, try again with a different number or draw a card");
+                Console.WriteLine("Cannot play that card, try again with a different number or draw a card \n");
                 PlayOrDraw(player);
             }
         }
     }
-    else { PlayOrDraw(player); }
+    else if (input == "UNO")
+    {
+        if (player.numOfCards == 2)
+        {
+            player.uno = true;
+            Console.WriteLine("You called UNO!\n");
+            PlayOrDraw(player);
+        }
+        else
+        {
+            Console.WriteLine("You need to have 2 cards to be able to call UNO! \n");
+            PlayOrDraw(player);
+        }
+    }
+    else
+    {
+        PlayOrDraw(player);
+    }
 }
 
 
@@ -217,11 +272,17 @@ while (!gameEnd)
 {
     if (currentScene == 0)
     {
+        Player player = new Player();
+        listOfPlayers.Add(player);
+
         Console.WriteLine("---UNO---");
         Console.WriteLine("Press enter to start");
         Console.ReadLine();
+        Console.WriteLine("Input a name");
+        listOfPlayers[0].name = Console.ReadLine().Trim();
+
         Console.WriteLine("Input the amount of bots to play against");
-        selectBots();
+        SelectBots();
 
         for (int i = 0; i < listOfPlayers.Count(); i++)
         {
@@ -238,11 +299,20 @@ while (!gameEnd)
     }
     else if (currentScene == 1)
     {
+        foreach (Player player in listOfPlayers)
+        {
+            if (player.numOfCards == 0)
+            {
+                currentScene = 2;
+            }
+        }
+
+
         if (whosTurn == 1)
         {
             if (!cardsShowed)
             {
-                Console.WriteLine($"---Your Turn!--- \n");
+                Console.WriteLine($"\n---Your Turn!--- \n");
                 DisplayCards(listOfPlayers[0]);
                 cardsShowed = true;
             }
@@ -253,11 +323,37 @@ while (!gameEnd)
         }
         else
         {
-            Console.WriteLine($"{listOfPlayers[whosTurn - 1].name}'s Turn! \nLast played card: {colors[playedCards.Last().color]} {playedCards.Last().number}\n");
+            Console.WriteLine($"\n{listOfPlayers[whosTurn - 1].name}'s Turn! \nLast played card: {colors[playedCards.Last().color]} {playedCards.Last().number}\n");
             Console.ReadLine();
             PlayCard(listOfPlayers[whosTurn - 1], null);
             Console.ReadLine();
         }
+    }
+    else
+    {
+        var sortedList = listOfPlayers.OrderBy(player => player.numOfCards).ToList();
+
+        foreach (Player player in sortedList)
+        {
+            if (player == listOfPlayers[0])
+            {
+                Console.WriteLine(listOfPlayers[0].name + " won the match! Congratulations!\n");
+            }
+            else if (player == listOfPlayers[1])
+            {
+                Console.WriteLine($"{listOfPlayers[1].name} came 2nd with {listOfPlayers[1].numOfCards} cards\n");
+            }
+            else if (player == listOfPlayers[2])
+            {
+                Console.WriteLine($"{listOfPlayers[2].name} came 3rd with {listOfPlayers[2].numOfCards} cards\n");
+            }
+            else
+            {
+                Console.WriteLine($"{listOfPlayers[3].name} came last with {listOfPlayers[3].numOfCards} cards\n");
+            }
+        }
+
+        Console.ReadLine();
     }
 }
 
