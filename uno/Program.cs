@@ -7,24 +7,56 @@ Random random = new Random();
 
 int botCount = 3;
 
-List<Player> listOfPlayers = new List<Player>();
+List<Player> listOfPlayers = new List<Player>(); //Is a list because the amount of players may vary
+List<string> names = new List<string>() { "Josh", "Wiggo", "Bullen", "Hoffman", "Djivan <3", "Micke", "Ruben", "ostmannen", "Pedro", "Gringbert" };
+//Is a list for the ability to remove used names so multiple bots don't get the same one
 
-for (int i = 1; i <= botCount + 1; i++)
-{
-    Player player = new Player();
-    listOfPlayers.Add(player);
-}
 
 int whosTurn = 1; //Whos turn it is  1 = player1, 2 = player2 etc...
 bool cardsShowed = false; //Just so it doesn't keep repeating the DisplayCards method
 bool gameEnd = false;
 
+
+string[] colors = { "Red", "Green", "Blue", "Yellow" };
 string[] scenes = { "start", "game", "end" };
 int currentScene = 0;
 
-string[] colors = { "Red", "Green", "Blue", "Yellow" };
 
 List<Card> playedCards = new List<Card>();
+
+
+void selectBots()
+{
+    Console.WriteLine("Minimum: 1, Maximum: 3\n");
+    string input = Console.ReadLine();
+
+    if (int.TryParse(input, out int result))
+    {
+        if (result < 1 || result > 3)
+        {
+            Console.WriteLine("Amount not allowed, try again\n");
+            selectBots();
+        }
+        else
+        {
+            botCount = result;
+
+            for (int i = 1; i <= botCount + 1; i++)
+            {
+                Player player = new Player();
+
+                int randomName = random.Next(0, names.Count() - 1);
+                player.name = names[randomName];
+                names.RemoveAt(randomName);
+                listOfPlayers.Add(player);
+            }
+        }
+    }
+    else{
+        Console.WriteLine("Not a number, try again");
+        selectBots();
+    }
+}
 
 
 void ResetHand(Player player)
@@ -46,22 +78,60 @@ void DrawCard(Player player)
 
     player.hand.Add(card);
 
-    if (player == listOfPlayers[0])
+    if (currentScene == 1)
     {
-        Console.WriteLine($"You drew a {colors[card.color]} {card.number}\n");
-        whosTurn += 1;
+        if (player == listOfPlayers[0])
+        {
+            Console.WriteLine($"You drew a {colors[card.color]} {card.number}\n");
+            player.numOfCards += 1;
+            whosTurn += 1;
+        }
     }
 }
 
 
 void DisplayCards(Player player)
 {
-    Console.WriteLine($"Number of cards: {player.numOfCards} \nP2: {listOfPlayers[1].numOfCards}, P3: {listOfPlayers[2].numOfCards}, P4: {listOfPlayers[3].numOfCards}\n");
+    if (listOfPlayers[0].numOfCards == 1)
+    {
+        Console.WriteLine($"You have ONE card remaining!! Don't forget to type UNO before you play your card!\n");
+    }
+    else
+    {
+        Console.WriteLine($"Number of cards: {player.numOfCards}");
+    }
+
+    Console.WriteLine(""); //Line for the foreach loop to contine writing on
+    foreach (Player bot in listOfPlayers)
+    {
+        if (bot != listOfPlayers[0]) //exclude the actual player
+        {
+            if (listOfPlayers.Count() > 2)
+            {
+                if (bot == listOfPlayers.Last())
+                {
+                    Console.Write($"{bot.name}: {bot.numOfCards}\n");
+                }
+                else
+                {
+                    Console.Write($"{bot.name}: {bot.numOfCards}, ");
+                }
+            }
+            else
+            {
+                Console.Write($"{bot.name}: {bot.numOfCards}");
+            }
+        }
+    }
+
     Console.WriteLine("Your cards:\n");
+
     for (int i = 0; i < player.hand.Count(); i++)
     {
-        Console.WriteLine($"card {i + 1} = {colors[player.hand[i].color]} {player.hand[i].number}\n");
+        Console.WriteLine($"Card {i + 1} = {colors[player.hand[i].color]} {player.hand[i].number}\n");
     }
+
+    Console.WriteLine($"Last played card: {colors[playedCards.Last().color]} {playedCards.Last().number}\n");
 }
 
 
@@ -73,7 +143,7 @@ void PlayCard(Player player, Card card)
         {
             if (botCard.color == playedCards.Last().color || botCard.number == playedCards.Last().number)
             {
-                Console.WriteLine($"{player} played a {colors[botCard.color]} {botCard.number}\n");
+                Console.WriteLine($"{player.name} played a {colors[botCard.color]} {botCard.number}\n");
                 playedCards.Add(botCard);
                 player.hand.Remove(botCard);
                 player.numOfCards = player.hand.Count();
@@ -82,7 +152,8 @@ void PlayCard(Player player, Card card)
             else
             {
                 DrawCard(player);
-                Console.WriteLine(player + " drew a card\n");
+                Console.WriteLine(player.name + " drew a card\n");
+                player.numOfCards = player.hand.Count();
                 break;
             }
         }
@@ -140,6 +211,8 @@ void PlayOrDraw(Player player)
     else { PlayOrDraw(player); }
 }
 
+
+//Game loop
 while (!gameEnd)
 {
     if (currentScene == 0)
@@ -147,6 +220,8 @@ while (!gameEnd)
         Console.WriteLine("---UNO---");
         Console.WriteLine("Press enter to start");
         Console.ReadLine();
+        Console.WriteLine("Input the amount of bots to play against");
+        selectBots();
 
         for (int i = 0; i < listOfPlayers.Count(); i++)
         {
@@ -167,7 +242,7 @@ while (!gameEnd)
         {
             if (!cardsShowed)
             {
-                Console.WriteLine($"Your Turn! \nLast played card: {colors[playedCards.Last().color]} {playedCards.Last().number}\n");
+                Console.WriteLine($"---Your Turn!--- \n");
                 DisplayCards(listOfPlayers[0]);
                 cardsShowed = true;
             }
@@ -178,7 +253,7 @@ while (!gameEnd)
         }
         else
         {
-            Console.WriteLine($"Player {whosTurn}'s Turn! \nLast played card: {colors[playedCards.Last().color]} {playedCards.Last().number}\n");
+            Console.WriteLine($"{listOfPlayers[whosTurn - 1].name}'s Turn! \nLast played card: {colors[playedCards.Last().color]} {playedCards.Last().number}\n");
             Console.ReadLine();
             PlayCard(listOfPlayers[whosTurn - 1], null);
             Console.ReadLine();
@@ -196,6 +271,7 @@ public class Card
 
 public class Player
 {
+    public string name;
     public int numOfCards = 7;
     public bool uno = false;
     public List<Card> hand = new List<Card>();
