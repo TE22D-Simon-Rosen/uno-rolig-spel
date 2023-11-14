@@ -1,14 +1,14 @@
 ﻿using System.Text.RegularExpressions;
 using System.Text;
 using System.Globalization;
-Console.OutputEncoding = Encoding.UTF8;
+Console.OutputEncoding = Encoding.Unicode;
 
 Random random = new Random();
 
 int botCount = 3;
 
 List<Player> listOfPlayers = new List<Player>(); //Is a list because the amount of players may vary
-List<string> names = new List<string>() { "Josh", "Wiggo", "Bullen", "Hoffman", "Djivan <3", "Micke", "Ruben", "ostmannen", "Pedro", "Gringbert" };
+List<string> names = new List<string>() { "fotsvamp", "Wiggo", "Bullen", "Hoffman", "Djivan <3", "Micke", "spånga monstret", "ostmannen", "Pedro", "Gringbert" };
 //Is a list for the ability to remove used names so multiple bots don't get the same one
 
 
@@ -74,49 +74,40 @@ void DrawCard(Player player)
 {
     Card card = new Card();
 
-    card.color = random.Next(1, 4);
-    card.number = random.Next(0, 9); //0-9 = normal, 10 = reverse card, 11 = +2, 12 = +4, 13 = change color 
+    card.color = random.Next(0, 4);
+    card.number = random.Next(0, 14); //0-9 = normal, 10 = reverse card, 11 = +2, 12 = +4, 13 = change color 
 
     player.hand.Add(card);
 
-    if (card.number > 9)
-    {
-        card.special = true;
 
-        if (card.number == 10)
-        {
-            card.specialName = "Reverse Card";
-        }
-        else if (card.number == 11)
-        {
-            card.specialName = "+2 Card";
-        }
-        else if (card.number == 12)
-        {
-            card.specialName = "+4 Card";
-        }
-        else
-        {
-            card.specialName = "Wild Card";
-        }
+
+    if (card.number <= 9)
+    {
+        card.name = $"{colors[card.color]} {card.number}";
+    }
+    else if (card.number == 10)
+    {
+        card.name = $"{colors[card.color]} Reverse Card";
+    }
+    else if (card.number == 11)
+    {
+        card.name = $"{colors[card.color]} +2 Card";
+    }
+    else if (card.number == 12)
+    {
+        card.name = "+4 Card";
     }
     else
+    {
+        card.name = "Wild Card";
+    }
+
 
     if (currentScene == 1)
     {
         if (player == listOfPlayers[0])
         {
-
-            if (card.special)
-            {
-                Console.WriteLine($"You drew a {card.specialName}\n");
-            }
-            else
-            {
-                Console.WriteLine($"You drew a {colors[card.color]} {card.number}\n");
-            }
-
-
+            Console.WriteLine($"You drew a {card.name}\n");
             player.numOfCards += 1;
         }
         else
@@ -166,24 +157,10 @@ void DisplayCards(Player player)
 
     for (int i = 0; i < player.hand.Count(); i++)
     {
-        if (player.hand[i].special)
-        {
-            Console.WriteLine($"Card {i + 1} = {player.hand[i].specialName}");
-        }
-        else
-        {
-            Console.WriteLine($"Card {i + 1} = {colors[player.hand[i].color]} {player.hand[i].number}\n");
-        }
+        Console.WriteLine($"Card {i + 1} = {player.hand[i].name}");
     }
 
-    if (playedCards.Last().special)
-    {
-        Console.WriteLine($"Last played card: {playedCards.Last().specialName}");
-    }
-    else
-    {
-        Console.WriteLine($"Last played card: {colors[playedCards.Last().color]} {playedCards.Last().number}\n");
-    }
+    Console.WriteLine($"Last played card: {playedCards.Last().name}");
 
 }
 
@@ -198,12 +175,14 @@ void PlayCard(Player player, Card card)
             {
                 if (player.numOfCards == 2)
                 {
-                    if (random.Next(1, 10) > 3)
+                    if (random.Next(1, 11) > 3)
                     { //70% chance for bot to call UNO
-                        Console.WriteLine($"{player.name} played a {colors[botCard.color]} {botCard.number}\n");
+                        Console.WriteLine($"{player.name} called UNO!");
+                        Console.WriteLine($"{player.name} played a {botCard.name}\n");
                         playedCards.Add(botCard);
                         player.hand.Remove(botCard);
                         player.numOfCards = player.hand.Count();
+                        player.uno = true;
                         break;
                     }
                     else
@@ -217,7 +196,7 @@ void PlayCard(Player player, Card card)
                 }
                 else
                 {
-                    Console.WriteLine($"{player.name} played a {colors[botCard.color]} {botCard.number}\n");
+                    Console.WriteLine($"{player.name} played a {botCard.name}\n");
                     playedCards.Add(botCard);
                     player.hand.Remove(botCard);
                     player.numOfCards = player.hand.Count();
@@ -227,6 +206,7 @@ void PlayCard(Player player, Card card)
             else
             {
                 DrawCard(player);
+                player.uno = false;
                 break;
             }
         }
@@ -242,7 +222,7 @@ void PlayCard(Player player, Card card)
     }
     else
     {
-        Console.WriteLine($"You played a {colors[card.color]} {card.number}\n");
+        Console.WriteLine($"You played a {card.name}\n");
         playedCards.Add(card);
         player.hand.Remove(card);
         player.numOfCards = player.hand.Count();
@@ -339,23 +319,16 @@ while (!gameEnd)
 
         //Automatically play a random card at start
         Card card = new Card();
-        card.color = random.Next(1, 4);
-        card.number = random.Next(0, 9);
+        card.color = random.Next(0, 4);
+        card.number = random.Next(0, 10);
         playedCards.Add(card);
+
+        card.name = colors[card.color] + " " + card.number;
 
         currentScene = 1;
     }
     else if (currentScene == 1)
     {
-        foreach (Player player in listOfPlayers)
-        {
-            if (player.numOfCards == 0)
-            {
-                currentScene = 2;
-            }
-        }
-
-
         if (whosTurn == 1)
         {
             if (!cardsShowed)
@@ -371,10 +344,17 @@ while (!gameEnd)
         }
         else
         {
-            Console.WriteLine($"\n{listOfPlayers[whosTurn - 1].name}'s Turn! \nLast played card: {colors[playedCards.Last().color]} {playedCards.Last().number}\n");
-            Console.ReadLine();
+            Console.WriteLine($"\n{listOfPlayers[whosTurn - 1].name}'s Turn! \nLast played card: {playedCards.Last().name}");
             PlayCard(listOfPlayers[whosTurn - 1], null);
             Console.ReadLine();
+        }
+
+        foreach (Player player in listOfPlayers)
+        {
+            if (player.numOfCards == 0)
+            {
+                currentScene = 2;
+            }
         }
     }
     else
@@ -383,21 +363,21 @@ while (!gameEnd)
 
         foreach (Player player in sortedList)
         {
-            if (player == listOfPlayers[0])
+            if (player == sortedList[0])
             {
                 Console.WriteLine(listOfPlayers[0].name + " won the match! Congratulations!\n");
             }
-            else if (player == listOfPlayers[1])
+            else if (player == sortedList[1])
             {
-                Console.WriteLine($"{listOfPlayers[1].name} came 2nd with {listOfPlayers[1].numOfCards} cards\n");
+                Console.WriteLine($"{sortedList[1].name} came 2nd with {sortedList[1].numOfCards} cards\n");
             }
-            else if (player == listOfPlayers[2])
+            else if (player == sortedList[2])
             {
-                Console.WriteLine($"{listOfPlayers[2].name} came 3rd with {listOfPlayers[2].numOfCards} cards\n");
+                Console.WriteLine($"{sortedList[2].name} came 3rd with {sortedList[2].numOfCards} cards\n");
             }
             else
             {
-                Console.WriteLine($"{listOfPlayers[3].name} came last with {listOfPlayers[3].numOfCards} cards\n");
+                Console.WriteLine($"{sortedList[3].name} came last with {sortedList[3].numOfCards} cards\n");
             }
         }
 
@@ -410,8 +390,7 @@ public class Card
 {
     public int number = 0;
     public int color = 0;
-    public bool special = false;
-    public string specialName;
+    public string name;
 }
 
 
