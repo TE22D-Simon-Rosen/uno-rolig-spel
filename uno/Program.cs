@@ -75,15 +75,48 @@ void DrawCard(Player player)
     Card card = new Card();
 
     card.color = random.Next(1, 4);
-    card.number = random.Next(0, 9);
+    card.number = random.Next(0, 9); //0-9 = normal, 10 = reverse card, 11 = +2, 12 = +4, 13 = change color 
 
     player.hand.Add(card);
+
+    if (card.number > 9)
+    {
+        card.special = true;
+
+        if (card.number == 10)
+        {
+            card.specialName = "Reverse Card";
+        }
+        else if (card.number == 11)
+        {
+            card.specialName = "+2 Card";
+        }
+        else if (card.number == 12)
+        {
+            card.specialName = "+4 Card";
+        }
+        else
+        {
+            card.specialName = "Wild Card";
+        }
+    }
+    else
 
     if (currentScene == 1)
     {
         if (player == listOfPlayers[0])
         {
-            Console.WriteLine($"You drew a {colors[card.color]} {card.number}\n");
+
+            if (card.special)
+            {
+                Console.WriteLine($"You drew a {card.specialName}\n");
+            }
+            else
+            {
+                Console.WriteLine($"You drew a {colors[card.color]} {card.number}\n");
+            }
+
+
             player.numOfCards += 1;
         }
         else
@@ -133,10 +166,25 @@ void DisplayCards(Player player)
 
     for (int i = 0; i < player.hand.Count(); i++)
     {
-        Console.WriteLine($"Card {i + 1} = {colors[player.hand[i].color]} {player.hand[i].number}\n");
+        if (player.hand[i].special)
+        {
+            Console.WriteLine($"Card {i + 1} = {player.hand[i].specialName}");
+        }
+        else
+        {
+            Console.WriteLine($"Card {i + 1} = {colors[player.hand[i].color]} {player.hand[i].number}\n");
+        }
     }
 
-    Console.WriteLine($"Last played card: {colors[playedCards.Last().color]} {playedCards.Last().number}\n");
+    if (playedCards.Last().special)
+    {
+        Console.WriteLine($"Last played card: {playedCards.Last().specialName}");
+    }
+    else
+    {
+        Console.WriteLine($"Last played card: {colors[playedCards.Last().color]} {playedCards.Last().number}\n");
+    }
+
 }
 
 
@@ -362,6 +410,8 @@ public class Card
 {
     public int number = 0;
     public int color = 0;
+    public bool special = false;
+    public string specialName;
 }
 
 
