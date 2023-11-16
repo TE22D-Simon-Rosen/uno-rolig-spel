@@ -8,8 +8,9 @@ Random random = new Random();
 int botCount = 3;
 
 List<Player> listOfPlayers = new List<Player>(); //Is a list because the amount of players may vary
-List<string> names = new List<string>() { "fotsvamp", "Wiggo", "Bullen", "Hoffman", "Djivan <3", "Micke", "spånga monstret", "ostmannen", "Pedro", "Gringbert" };
+List<string> names = new List<string>() { "fotsvamp", "Wiggo", "Bullen", "Hoffman", "Djivan <3", "ostmannen", "Pedro", "Gringbert" };
 //Is a list for the ability to remove used names so multiple bots don't get the same one
+int direction = 1; //Which direction the game goes in, 1 for clockwise and -1 for counter-clockwise
 
 
 int whosTurn = 1; //Whos turn it is  1 = player1, 2 = player2 etc...
@@ -80,7 +81,6 @@ void DrawCard(Player player)
     player.hand.Add(card);
 
 
-
     if (card.number <= 9)
     {
         card.name = $"{colors[card.color]} {card.number}";
@@ -88,18 +88,24 @@ void DrawCard(Player player)
     else if (card.number == 10)
     {
         card.name = $"{colors[card.color]} Reverse Card";
+        card.reverse = true;
     }
     else if (card.number == 11)
     {
         card.name = $"{colors[card.color]} +2 Card";
+        card.plus2 = true;
     }
     else if (card.number == 12)
     {
-        card.name = "+4 Card";
+        card.name = "Wild +4 Card";
+        card.plus4 = true;
+        card.special = true;
     }
     else
     {
         card.name = "Wild Card";
+        card.wild = true;
+        card.special = true;
     }
 
 
@@ -171,7 +177,7 @@ void PlayCard(Player player, Card card)
     {
         foreach (Card botCard in player.hand)
         {
-            if (botCard.color == playedCards.Last().color || botCard.number == playedCards.Last().number)
+            if (botCard.color == playedCards.Last().color || botCard.number == playedCards.Last().number || botCard.wild || botCard.plus4)
             {
                 if (player.numOfCards == 2)
                 {
@@ -200,6 +206,12 @@ void PlayCard(Player player, Card card)
                     playedCards.Add(botCard);
                     player.hand.Remove(botCard);
                     player.numOfCards = player.hand.Count();
+
+                    if (botCard.special || botCard.plus2 || botCard.reverse)
+                    {
+                        SpecialCard(player, botCard);
+                    }
+
                     break;
                 }
             }
@@ -211,14 +223,7 @@ void PlayCard(Player player, Card card)
             }
         }
 
-        if (whosTurn == listOfPlayers.Count())
-        {
-            whosTurn = 1;
-        }
-        else
-        {
-            whosTurn += 1;
-        }
+
     }
     else
     {
@@ -226,7 +231,111 @@ void PlayCard(Player player, Card card)
         playedCards.Add(card);
         player.hand.Remove(card);
         player.numOfCards = player.hand.Count();
-        whosTurn += 1;
+
+        if (card.special || card.plus2 || card.reverse)
+        {
+            SpecialCard(player, card);
+        }
+
+    }
+
+    if (whosTurn == listOfPlayers.Count() && direction == 1)
+    {
+        whosTurn = 1;
+    }
+    else if (whosTurn == 1 && direction == -1)
+    {
+        whosTurn = listOfPlayers.Count();
+    }
+    else
+    {
+        whosTurn += direction;
+    }
+}
+
+
+void SpecialCard(Player player, Card card)
+{
+    Player target = null;
+    if (listOfPlayers.IndexOf(player) + direction < 0)
+    {
+        target = listOfPlayers.Last();
+    }
+    else if (listOfPlayers.IndexOf(player) + direction > listOfPlayers.Count() - 1)
+    {
+        target = listOfPlayers[0];
+    }
+    else
+    {
+        target = listOfPlayers[whosTurn - 1 + direction];
+    }
+
+
+    if (card.reverse)
+    {
+        Console.WriteLine("Changing direction\n");
+        direction *= -1;
+    }
+    else if (card.plus2)
+    {
+        Console.WriteLine($"{target.name} has to draw 2 cards!\n");
+        DrawCard(target);
+        DrawCard(target);
+    }
+    else
+    {
+        int tempColor = 0; //Temporarily store the selected color to apply it to the card's color id below
+
+        if (player == listOfPlayers[0])
+        {
+            //Lets the player select a color for the wild card if they played it
+            Console.WriteLine("Type the color you want to select out of: \nRed, Green, Blue, Yellow");
+            string input = Console.ReadLine().Trim().ToUpper();
+
+            if (input == "RED")
+            {
+                tempColor = 0;
+            }
+            else if (input == "GREEN")
+            {
+                tempColor = 1;
+            }
+            else if (input == "BLUE")
+            {
+                tempColor = 2;
+            }
+            else if (input == "YELLOW")
+            {
+                tempColor = 3;
+            }
+            else
+            {
+                Console.WriteLine("Color not allowed");
+                SpecialCard(player, card);
+            }
+        }
+        else
+        {
+            var numOfColors = new List<int>() { 0, 0, 0, 0 }; //To see which color the bot has the most of for it to select the best color
+            foreach (Card i in player.hand)
+            {
+                numOfColors[i.color] += 1; //Adds 1 to the corresponding slot
+            }
+            tempColor = numOfColors.IndexOf(numOfColors.Max()); //Finds the index of the largest number in the list and sets that as the color value
+        }
+
+        card.color = tempColor;
+        card.name = colors[card.color] + " " + card.name;
+        Console.WriteLine($"{player.name} changed the color to {colors[card.color]}");
+
+        if (card.plus4)
+        {
+            Console.WriteLine($"{target.name} has to draw 4 cards!\n");
+            for (int i = 1; i <= 4; i++)
+            {
+                DrawCard(target);
+            }
+        }
     }
 }
 
@@ -252,8 +361,8 @@ void PlayOrDraw(Player player)
         }
         else
         {
-            //Checks if the selected card is the same color or number as the card at the top of the pile
-            if (player.hand[result - 1].color == playedCards.Last().color || player.hand[result - 1].number == playedCards.Last().number)
+            //Checks if the selected card is the same color or number as the card at the top of the pile OR if it is a wild card or +4, as those don't have a specific color
+            if (player.hand[result - 1].color == playedCards.Last().color || player.hand[result - 1].number == playedCards.Last().number || player.hand[result - 1].wild || player.hand[result - 1].plus4)
             {
                 if (player.numOfCards == 2 && !player.uno) //Gives the player 3 cards if they forget to call uno when they have to
                 {
@@ -391,6 +500,11 @@ public class Card
     public int number = 0;
     public int color = 0;
     public string name;
+    public bool special = false;
+    public bool reverse = false;
+    public bool plus2 = false;
+    public bool plus4 = false;
+    public bool wild = false;
 }
 
 
