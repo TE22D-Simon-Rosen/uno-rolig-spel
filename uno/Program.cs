@@ -7,20 +7,20 @@ Random random = new Random();
 
 int botCount = 3;
 
+
 List<Player> listOfPlayers = new List<Player>(); //Is a list because the amount of players may vary
-List<string> names = new List<string>() { "fotsvamp", "Wiggo", "Bullen", "Hoffman", "Djivan <3", "ostmannen", "Pedro", "Gringbert" };
+List<string> names = new List<string>() { "fotsvamp", "Wiggo", "Bullen", "Hoffman", "Djivan <3", "ostmannen", "Pedro", "Gringbert", "festis cactus lime", "chipspåse", "NTI parasit" };
 //Is a list for the ability to remove used names so multiple bots don't get the same one
-int direction = 1; //Which direction the game goes in, 1 for clockwise and -1 for counter-clockwise
 
 
-int whosTurn = 1; //Whos turn it is  1 = player1, 2 = player2 etc...
 bool cardsShowed = false; //Just so it doesn't keep repeating the DisplayCards method
 bool gameEnd = false;
 
 
 string[] colors = { "Red", "Green", "Blue", "Yellow" };
-string[] scenes = { "start", "game", "end" };
 int currentScene = 0;
+int whosTurn = 1; //Whos turn it is  1 = player1, 2 = player2 etc...
+int direction = 1; //Which direction the game goes in, 1 for clockwise and -1 for counter-clockwise
 
 
 List<Card> playedCards = new List<Card>();
@@ -361,7 +361,7 @@ void PlayOrDraw(Player player)
         }
         else
         {
-            //Checks if the selected card is the same color or number as the card at the top of the pile OR if it is a wild card or +4, as those don't have a specific color
+            //Checks if the selected card is the same color or number as the card at the top of the pile OR if it is a wild card or +4, as those don't require a specific color
             if (player.hand[result - 1].color == playedCards.Last().color || player.hand[result - 1].number == playedCards.Last().number || player.hand[result - 1].wild || player.hand[result - 1].plus4)
             {
                 if (player.numOfCards == 2 && !player.uno) //Gives the player 3 cards if they forget to call uno when they have to
@@ -416,7 +416,14 @@ while (!gameEnd)
         Console.WriteLine("Press enter to start");
         Console.ReadLine();
         Console.WriteLine("Input a name");
-        listOfPlayers[0].name = Console.ReadLine().Trim();
+        string input = Console.ReadLine().Trim();
+        if (string.IsNullOrWhiteSpace(input)){
+            listOfPlayers[0].name = "Player 1";
+        }
+        else{
+            listOfPlayers[0].name = input;
+        }
+        
 
         Console.WriteLine("Input the amount of bots to play against");
         SelectBots();
@@ -491,6 +498,7 @@ while (!gameEnd)
         }
 
         Console.ReadLine();
+        gameEnd = true;
     }
 }
 

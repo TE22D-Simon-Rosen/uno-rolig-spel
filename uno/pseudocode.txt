@@ -1,0 +1,28 @@
+void DisplayCards
+{
+    If (player1 has 2 cards)
+    {
+        Console.WriteLine("don't forget to call uno");
+    }
+    Else
+    {
+        Console.WriteLine(number of cards);
+    }
+
+    Foreach (object in listofplayers)
+    {
+        if (object != player1)
+        {
+            Console.WriteLine($"{objectName}: {amountOfCards}");
+        }
+    }
+
+    Console.WriteLine("Your cards:");
+    for (card in playerCards)
+    {
+        Console.WriteLine(cardName);
+    }
+
+    Console.WriteLine($"Last played card: {lastPlayedCard}");
+}
+
